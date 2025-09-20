@@ -1,0 +1,184 @@
+-- ==============================
+-- Brainrot Dupe Executor UI (Mobile Friendly)
+-- ==============================
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "BrainrotExecutor"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0.9,0,0.8,0) -- relative to screen
+mainFrame.Position = UDim2.new(0.5,0,0.5,0)
+mainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+mainFrame.BackgroundColor3 = Color3.fromRGB(120,81,169)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0,12)
+
+-- Slide-in animation from top
+mainFrame.Position = UDim2.new(0.5,0,-1,0)
+TweenService:Create(mainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5,0,0.5,0)}):Play()
+
+-- Gradient
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(180,150,220)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(120,81,169))
+}
+gradient.Rotation = 135
+gradient.Parent = mainFrame
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(0.95,0,0.08,0)
+title.Position = UDim2.new(0.025,0,0.02,0)
+title.BackgroundTransparency = 1
+title.Text = "STEAL A BRAINROT DUPE"
+title.TextColor3 = Color3.new(1,1,1)
+title.TextScaled = true
+title.Font = Enum.Font.SourceSansBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = mainFrame
+
+-- Subtitle
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(0.95,0,0.05,0)
+subtitle.Position = UDim2.new(0.025,0,0.11,0)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "YT: ZuriScripts"
+subtitle.TextColor3 = Color3.fromRGB(255,255,255)
+subtitle.TextScaled = true
+subtitle.Font = Enum.Font.SourceSans
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+subtitle.Parent = mainFrame
+
+-- Minimize Button
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0.1,0,0.08,0)
+minimizeBtn.Position = UDim2.new(0.9,0,0.02,0)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(70,50,120)
+minimizeBtn.Text = "-"
+minimizeBtn.TextColor3 = Color3.new(1,1,1)
+minimizeBtn.TextScaled = true
+minimizeBtn.Font = Enum.Font.SourceSansBold
+minimizeBtn.Parent = mainFrame
+
+-- Left Panel (Brainrot List)
+local leftPanel = Instance.new("Frame")
+leftPanel.Size = UDim2.new(0.55,0,0.65,0)
+leftPanel.Position = UDim2.new(0.025,0,0.2,0)
+leftPanel.BackgroundColor3 = Color3.fromRGB(40,40,50)
+leftPanel.BorderSizePixel = 0
+leftPanel.Parent = mainFrame
+Instance.new("UICorner", leftPanel).CornerRadius = UDim.new(0,8)
+
+local listTitle = Instance.new("TextLabel")
+listTitle.Size = UDim2.new(1,0,0.08,0)
+listTitle.Position = UDim2.new(0,0,0,0)
+listTitle.BackgroundTransparency = 1
+listTitle.Text = "Brainrot list"
+listTitle.TextColor3 = Color3.new(1,1,1)
+listTitle.TextScaled = true
+listTitle.Font = Enum.Font.SourceSansBold
+listTitle.Parent = leftPanel
+
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1,-10,1,-40)
+scrollFrame.Position = UDim2.new(0,5,0,35)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.ScrollBarThickness = 6
+scrollFrame.Parent = leftPanel
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0,5)
+listLayout.Parent = scrollFrame
+
+-- Right Panel (Picked Brainrot)
+local rightPanel = Instance.new("Frame")
+rightPanel.Size = UDim2.new(0.4,0,0.65,0)
+rightPanel.Position = UDim2.new(0.575,0,0.2,0)
+rightPanel.BackgroundColor3 = Color3.fromRGB(40,40,50)
+rightPanel.BorderSizePixel = 0
+rightPanel.Parent = mainFrame
+Instance.new("UICorner", rightPanel).CornerRadius = UDim.new(0,8)
+
+local selectedFrame = Instance.new("Frame")
+selectedFrame.Size = UDim2.new(1,-10,0.5,0)
+selectedFrame.Position = UDim2.new(0,5,0,0)
+selectedFrame.BackgroundColor3 = Color3.fromRGB(140,70,140)
+selectedFrame.BorderSizePixel = 0
+selectedFrame.Parent = rightPanel
+Instance.new("UICorner", selectedFrame).CornerRadius = UDim.new(0,8)
+
+local selectedTitle = Instance.new("TextLabel")
+selectedTitle.Size = UDim2.new(1,0,0.3,0)
+selectedTitle.Position = UDim2.new(0,0,0,5)
+selectedTitle.BackgroundTransparency = 1
+selectedTitle.Text = "Picked Brainrot"
+selectedTitle.TextColor3 = Color3.new(1,1,1)
+selectedTitle.TextScaled = true
+selectedTitle.Font = Enum.Font.SourceSansBold
+selectedTitle.Parent = selectedFrame
+
+local selectedName = Instance.new("TextLabel")
+selectedName.Size = UDim2.new(1,0,0.3,0)
+selectedName.Position = UDim2.new(0,0,0.35,0)
+selectedName.BackgroundTransparency = 1
+selectedName.Text = "None Selected"
+selectedName.TextColor3 = Color3.new(1,1,1)
+selectedName.TextScaled = true
+selectedName.Font = Enum.Font.SourceSans
+selectedName.TextWrapped = true
+selectedName.Parent = selectedFrame
+
+local spawnButton = Instance.new("TextButton")
+spawnButton.Size = UDim2.new(1,-10,0.15,0)
+spawnButton.Position = UDim2.new(0,5,0.55,0)
+spawnButton.BackgroundColor3 = Color3.fromRGB(140,70,140)
+spawnButton.Text = "Dupe"
+spawnButton.TextColor3 = Color3.new(1,1,1)
+spawnButton.TextScaled = true
+spawnButton.Font = Enum.Font.SourceSansBold
+spawnButton.BorderSizePixel = 0
+spawnButton.Parent = rightPanel
+Instance.new("UICorner", spawnButton).CornerRadius = UDim.new(0,8)
+
+-- ==============================
+-- Dragging (Mobile Friendly)
+-- ==============================
+local dragging = false
+local dragStart = nil
+local startPos = nil
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+print("Brainrot Executor UI (Mobile Friendly) Loaded!")
