@@ -1,19 +1,13 @@
--- Mobile-First Brainrot Dupe Executor UI
--- Scans your base for brainrots
+-- Brainrot Dupe Executor UI (Responsive for PC & Mobile)
+-- Always detects brainrots in your base
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local screenSize = workspace.CurrentCamera.ViewportSize
-
--- Detect if mobile
-local isMobile = screenSize.X < 1000 or screenSize.Y < 700
-local frameWidth = isMobile and screenSize.X * 0.9 or 800
-local frameHeight = isMobile and screenSize.Y * 0.8 or 500
 
 -- Create ScreenGui
 local screenGui = Instance.new("ScreenGui")
@@ -23,21 +17,32 @@ screenGui.ResetOnSpawn = false
 
 -- Main Frame
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, frameWidth, 0, frameHeight)
-mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.BackgroundColor3 = Color3.fromRGB(120,81,169)
+mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+mainFrame.Size = UDim2.new(0.85, 0, 0.7, 0) -- scale for mobile
+mainFrame.BackgroundColor3 = Color3.fromRGB(120, 81, 169)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
 
+-- Gradient
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 150, 220)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 81, 169))
+}
+gradient.Rotation = 135
+gradient.Parent = mainFrame
+
+-- Corner rounding
 local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0,12)
+corner.CornerRadius = UDim.new(0, 12)
 corner.Parent = mainFrame
 
 -- Title
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -60, 0, 60)
-title.Position = UDim2.new(0,10,0,10)
+title.AnchorPoint = Vector2.new(0,0)
+title.Size = UDim2.new(1, -60, 0, 0.1*mainFrame.AbsoluteSize.Y)
+title.Position = UDim2.new(0, 10, 0, 10)
 title.BackgroundTransparency = 1
 title.Text = "STEAL A BRAINROT DUPE"
 title.TextColor3 = Color3.new(1,1,1)
@@ -48,8 +53,9 @@ title.Parent = mainFrame
 
 -- Subtitle
 local subtitle = Instance.new("TextLabel")
-subtitle.Size = UDim2.new(1, -60, 0, 30)
-subtitle.Position = UDim2.new(0,10,0,70)
+subtitle.AnchorPoint = Vector2.new(0,0)
+subtitle.Size = UDim2.new(1, -60, 0, 0.05*mainFrame.AbsoluteSize.Y)
+subtitle.Position = UDim2.new(0, 10, 0, 0.1*mainFrame.AbsoluteSize.Y + 15)
 subtitle.BackgroundTransparency = 1
 subtitle.Text = "YT: ZuriScripts"
 subtitle.TextColor3 = Color3.fromRGB(255,255,255)
@@ -60,8 +66,8 @@ subtitle.Parent = mainFrame
 
 -- Minimize Button
 local minimizeBtn = Instance.new("TextButton")
-minimizeBtn.Size = UDim2.new(0,50,0,50)
-minimizeBtn.Position = UDim2.new(1,-60,0,10)
+minimizeBtn.Size = UDim2.new(0, 50, 0, 50)
+minimizeBtn.Position = UDim2.new(1, -60, 0, 10)
 minimizeBtn.BackgroundColor3 = Color3.fromRGB(70,50,120)
 minimizeBtn.Text = "-"
 minimizeBtn.TextColor3 = Color3.new(1,1,1)
@@ -73,24 +79,20 @@ local minimized = false
 local mainFrameSize = mainFrame.Size
 local mainFramePos = mainFrame.Position
 
--- Panels dimensions
-local leftWidth = mainFrame.Size.X.Offset * 0.6
-local rightWidth = mainFrame.Size.X.Offset * 0.35
-local panelHeight = mainFrame.Size.Y.Offset - 110
-
--- Left Panel
+-- Left Panel (Brainrot List)
 local leftPanel = Instance.new("Frame")
-leftPanel.Size = UDim2.new(0, leftWidth, 0, panelHeight)
-leftPanel.Position = UDim2.new(0, 20, 0, 110)
+leftPanel.Size = UDim2.new(0.55, 0, 0.6, 0)
+leftPanel.Position = UDim2.new(0, 20, 0.15, 0)
 leftPanel.BackgroundColor3 = Color3.fromRGB(40,40,50)
 leftPanel.BorderSizePixel = 0
 leftPanel.Parent = mainFrame
+
 local leftCorner = Instance.new("UICorner")
 leftCorner.CornerRadius = UDim.new(0,8)
 leftCorner.Parent = leftPanel
 
 local listTitle = Instance.new("TextLabel")
-listTitle.Size = UDim2.new(1,0,0,40)
+listTitle.Size = UDim2.new(1,0,0,0.1*leftPanel.AbsoluteSize.Y)
 listTitle.Position = UDim2.new(0,0,0,10)
 listTitle.BackgroundTransparency = 1
 listTitle.Text = "Brainrot list"
@@ -100,8 +102,8 @@ listTitle.Font = Enum.Font.SourceSansBold
 listTitle.Parent = leftPanel
 
 local scrollFrame = Instance.new("ScrollingFrame")
-scrollFrame.Size = UDim2.new(1,-20,1,-60)
-scrollFrame.Position = UDim2.new(0,10,0,50)
+scrollFrame.Size = UDim2.new(1, -20, 1, -50)
+scrollFrame.Position = UDim2.new(0,10,0,0.1*leftPanel.AbsoluteSize.Y+10)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.BorderSizePixel = 0
 scrollFrame.ScrollBarThickness = 6
@@ -112,29 +114,31 @@ listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 listLayout.Padding = UDim.new(0,5)
 listLayout.Parent = scrollFrame
 
--- Right Panel
+-- Right Panel (Picked Brainrot)
 local rightPanel = Instance.new("Frame")
-rightPanel.Size = UDim2.new(0,rightWidth,0,panelHeight)
-rightPanel.Position = UDim2.new(0,mainFrame.Size.X.Offset - rightWidth - 20,0,110)
+rightPanel.Size = UDim2.new(0.4, 0, 0.6, 0)
+rightPanel.Position = UDim2.new(0.57, 0, 0.15, 0)
 rightPanel.BackgroundColor3 = Color3.fromRGB(40,40,50)
 rightPanel.BorderSizePixel = 0
 rightPanel.Parent = mainFrame
+
 local rightCorner = Instance.new("UICorner")
 rightCorner.CornerRadius = UDim.new(0,8)
 rightCorner.Parent = rightPanel
 
 local selectedFrame = Instance.new("Frame")
-selectedFrame.Size = UDim2.new(1,-20,0,120)
-selectedFrame.Position = UDim2.new(0,10,0,50)
+selectedFrame.Size = UDim2.new(1, -20, 0.5, 0)
+selectedFrame.Position = UDim2.new(0,10,0,10)
 selectedFrame.BackgroundColor3 = Color3.fromRGB(140,70,140)
 selectedFrame.BorderSizePixel = 0
 selectedFrame.Parent = rightPanel
+
 local selectedCorner = Instance.new("UICorner")
 selectedCorner.CornerRadius = UDim.new(0,8)
 selectedCorner.Parent = selectedFrame
 
 local selectedTitle = Instance.new("TextLabel")
-selectedTitle.Size = UDim2.new(1,0,0,40)
+selectedTitle.Size = UDim2.new(1,0,0,0.3*selectedFrame.AbsoluteSize.Y)
 selectedTitle.Position = UDim2.new(0,0,0,10)
 selectedTitle.BackgroundTransparency = 1
 selectedTitle.Text = "Picked Brainrot"
@@ -144,8 +148,8 @@ selectedTitle.Font = Enum.Font.SourceSansBold
 selectedTitle.Parent = selectedFrame
 
 local selectedName = Instance.new("TextLabel")
-selectedName.Size = UDim2.new(1,0,0,40)
-selectedName.Position = UDim2.new(0,0,0,50)
+selectedName.Size = UDim2.new(1,0,0,0.3*selectedFrame.AbsoluteSize.Y)
+selectedName.Position = UDim2.new(0,0,0,0.4*selectedFrame.AbsoluteSize.Y)
 selectedName.BackgroundTransparency = 1
 selectedName.Text = "None Selected"
 selectedName.TextColor3 = Color3.new(1,1,1)
@@ -155,8 +159,8 @@ selectedName.TextWrapped = true
 selectedName.Parent = selectedFrame
 
 local spawnButton = Instance.new("TextButton")
-spawnButton.Size = UDim2.new(1,-20,0,50)
-spawnButton.Position = UDim2.new(0,10,1,-70)
+spawnButton.Size = UDim2.new(1, -20, 0, 0.12*rightPanel.AbsoluteSize.Y)
+spawnButton.Position = UDim2.new(0,10,1,-0.14*rightPanel.AbsoluteSize.Y)
 spawnButton.BackgroundColor3 = Color3.fromRGB(140,70,140)
 spawnButton.Text = "Dupe"
 spawnButton.TextColor3 = Color3.new(1,1,1)
@@ -164,75 +168,83 @@ spawnButton.TextScaled = true
 spawnButton.Font = Enum.Font.SourceSansBold
 spawnButton.BorderSizePixel = 0
 spawnButton.Parent = rightPanel
+
 local spawnCorner = Instance.new("UICorner")
 spawnCorner.CornerRadius = UDim.new(0,8)
 spawnCorner.Parent = spawnButton
 
--- Dragging (PC only)
+-- Dragging functionality (works on PC & Mobile)
 local dragging = false
 local dragStart = nil
 local startPos = nil
-mainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+local function updatePosition(input)
+    if dragging then
         local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- ======================
--- SCAN PLAYER BASE FOR BRAINROTS
--- ======================
-local brainrots = {}
-for _, plot in ipairs(workspace.Plots:GetChildren()) do
-    local label = plot:FindFirstChild("PlotSign") 
-        and plot.PlotSign:FindFirstChild("SurfaceGui") 
-        and plot.PlotSign.SurfaceGui:FindFirstChild("Frame") 
-        and plot.PlotSign.SurfaceGui.Frame:FindFirstChild("TextLabel")
-    if label and label.Text:find(player.DisplayName) then
-        local podiums = plot:FindFirstChild("AnimalPodiums")
-        if podiums then
-            for _, podium in ipairs(podiums:GetChildren()) do
-                local spawnBase = podium:FindFirstChild("Base") and podium.Base:FindFirstChild("Spawn")
-                local overhead = spawnBase and spawnBase:FindFirstChild("Attachment") and spawnBase.Attachment:FindFirstChild("AnimalOverhead")
-                if overhead then
-                    local name = overhead:FindFirstChild("DisplayName") and overhead.DisplayName.Text or "Unknown"
-                    table.insert(brainrots, name)
-                end
-            end
-        end
+        local offsetX = delta.X
+        local offsetY = delta.Y
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + offsetX, startPos.Y.Scale, startPos.Y.Offset + offsetY)
     end
 end
 
--- Populate scrollFrame
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(updatePosition)
+
+-- =======================
+-- SCAN PLAYER BASE FOR BRAINROTS
+-- =======================
+local brainrots = {}
+
+for _, plot in ipairs(workspace.Plots:GetChildren()) do
+	local label = plot:FindFirstChild("PlotSign") 
+		and plot.PlotSign:FindFirstChild("SurfaceGui") 
+		and plot.PlotSign.SurfaceGui:FindFirstChild("Frame") 
+		and plot.PlotSign.SurfaceGui.Frame:FindFirstChild("TextLabel")
+	if label and label.Text:find(player.DisplayName) then
+		local podiums = plot:FindFirstChild("AnimalPodiums")
+		if podiums then
+			for _, podium in ipairs(podiums:GetChildren()) do
+				local attachment = podium.Base.Spawn:FindFirstChild("Attachment")
+				local overhead = attachment and attachment:FindFirstChild("AnimalOverhead")
+				if overhead then
+					local name = overhead:FindFirstChild("DisplayName") and overhead.DisplayName.Text or "Unknown"
+					table.insert(brainrots, name)
+				end
+			end
+		end
+	end
+end
+
+-- Populate GUI list with brainrots
 local selectedItem = nil
 local selectedButton = nil
+
 for i, itemName in ipairs(brainrots) do
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1,-10,0,35)
-    button.BackgroundColor3 = Color3.fromRGB(80,80,90)
+    button.Size = UDim2.new(1, -10, 0, 0.08*scrollFrame.AbsoluteSize.Y)
+    button.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
     button.Text = itemName
     button.TextColor3 = Color3.new(1,1,1)
     button.TextScaled = true
     button.Font = Enum.Font.SourceSans
     button.BorderSizePixel = 0
     button.Parent = scrollFrame
-
+    
     local buttonCorner = Instance.new("UICorner")
     buttonCorner.CornerRadius = UDim.new(0,6)
     buttonCorner.Parent = button
-
+    
     button.MouseButton1Click:Connect(function()
         if selectedButton then
             selectedButton.BackgroundColor3 = Color3.fromRGB(80,80,90)
@@ -242,19 +254,20 @@ for i, itemName in ipairs(brainrots) do
         button.BackgroundColor3 = Color3.fromRGB(140,70,140)
         selectedName.Text = itemName
     end)
-
+    
     button.MouseEnter:Connect(function()
         if button ~= selectedButton then
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100,100,110)}):Play()
         end
     end)
-
+    
     button.MouseLeave:Connect(function()
         if button ~= selectedButton then
             TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80,80,90)}):Play()
         end
     end)
 end
+
 scrollFrame.CanvasSize = UDim2.new(0,0,0,#brainrots*40)
 
 -- Spawn button functionality
@@ -266,17 +279,25 @@ spawnButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Minimize / Restore
+-- =======================
+-- MINIMIZE BUTTON LOGIC
+-- =======================
 minimizeBtn.MouseButton1Click:Connect(function()
     minimized = not minimized
     if minimized then
-        TweenService:Create(mainFrame, TweenInfo.new(0.4), {Size=UDim2.new(0,frameWidth,0,80), Position=UDim2.new(0.5,0,0.5,0)}):Play()
+        TweenService:Create(mainFrame, TweenInfo.new(0.4), {
+            Size = UDim2.new(0.85,0,0.1,0),
+            Position = UDim2.new(0.5,0,0.05,0)
+        }):Play()
         leftPanel.Visible = false
         rightPanel.Visible = false
         spawnButton.Visible = false
         subtitle.Visible = false
     else
-        TweenService:Create(mainFrame, TweenInfo.new(0.4), {Size=UDim2.new(0,frameWidth,0,frameHeight), Position=UDim2.new(0.5,0,0.5,0)}):Play()
+        TweenService:Create(mainFrame, TweenInfo.new(0.4), {
+            Size = mainFrameSize,
+            Position = mainFramePos
+        }):Play()
         leftPanel.Visible = true
         rightPanel.Visible = true
         spawnButton.Visible = true
